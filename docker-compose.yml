@@ -1,0 +1,36 @@
+version: '3'
+services: 
+    app:
+        image: node:alpine
+        command: npm start
+        ports: 
+            - "80:3000"
+        volumes:
+            - ./src:/app
+        working_dir: /app
+        links: 
+             - mysql
+
+    mysql:
+        image: mysql:5.7
+        ports: 
+             - "3306:3306"
+        volumes: 
+            - mysql:/var/lib/mysql
+        environment: 
+             MYSQL_ROOT_PASSWORD: '12345'   
+        
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        restart: always
+        links: 
+            - mysql
+        ports: 
+             - 8183:80
+        environment: 
+            PMA_HOST: mysql
+            MYSQL_USERNAME: root
+            MYSQL_ROOT_PASSWORD: '12345'
+
+volumes:
+    mysql:
