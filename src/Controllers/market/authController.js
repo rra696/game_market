@@ -1,28 +1,18 @@
-const User = require("../../Models/user");
+const User = require('../../config/db').user;
+const {resolveError} = require('../../Utils/ErrorUtils/errorResolver');
 
-exports.register = function(req, res) {
+exports.register = function (req, res) {
     const {email, password} = req.body;
-
-    const user = new User({
-        email: email,
-        password: password
-    });
-
-   User.findByEmail(email).then( 
-        (result) => {
-            if(!result.length) {
-                res.status(200).json({error: "Пользователь с данным email существует!"});
-            }
-            
-            
-        }, 
-        (err) => {
-            res.status(500).json("Извините, возникла ошибка при выполнении запроса!");
-        }
-    );
-   
+    User.create({email: email, password: password})
+        .then(user => {
+            res.status(201).json({success: "Удачно созданный челик" + user.id});
+        })
+        .catch(err => {
+            const errorResult = resolveError(err);
+            res.status(200).json({errors: errorResult});
+        });
 }
 
-exports.login = function(req, res) {
-    res.status(201).json({ message: "OK" });
+exports.login = function (req, res) {
+    res.status(201).json({message: "OK"});
 }
