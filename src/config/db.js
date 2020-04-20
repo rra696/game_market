@@ -10,8 +10,7 @@ const dbConfig = {
 
  const connection = new Sequelize(dbConfig.database, dbConfig.user, dbConfig.password, {
     host: dbConfig.host,
-    dialect: dbConfig.dialect,
-    operatorsAliases: false,
+    dialect: dbConfig.dialect
 });
 
 const db = {};

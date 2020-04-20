@@ -1,4 +1,5 @@
 const express = require('express');
+require('dotenv').config();
 const app = express();
 const bodyParser = require('body-parser');
 const authRouter = require('./Routes/authRouter');
@@ -13,7 +14,7 @@ app.use(function (req, res, next) {
     res.status(404).send('Not found');
 });
 
-db.connection.sync({force : true}).then(
+db.connection.sync().then(
     app.listen(3000, function () {
         console.log('Server start on port: 80');
     })
