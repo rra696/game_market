@@ -22,10 +22,10 @@ module.exports = (connection, Sequelize) => {
             }
         }
         ,
-        authToken: {
+        accessToken: {
             type: Sequelize.STRING,
         },
-        refToken:{
+        refreshToken:{
             type: Sequelize.STRING,
         }
     });

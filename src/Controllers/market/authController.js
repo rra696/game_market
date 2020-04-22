@@ -28,7 +28,25 @@ exports.login = function (req, res) {
             const accessToken = authService.getAccessToken(user);
             const refreshToken = authService.getRefreshToken(user);
 
-            res.status(201).json({success: "OK", accessToken: accessToken, refreshToken: refreshToken});
+            updateData = {
+                accessToken: accessToken,
+                refreshToken: refreshToken
+            }
+
+            userRepository.updateUserById(user.id, updateData)
+            .then(updatedRows => {
+
+                if (!updatedRows[0]) {
+                    res.status(200).json({error: "Failed login"});
+                }
+                
+                res.status(201).json({success: "OK", accessToken: accessToken, refreshToken: refreshToken});
+            })
+            .catch(err => {
+                res.json(err);
+            });
+            
+           
         })
         .catch(err => {
             res.status(200).json({error: err});
