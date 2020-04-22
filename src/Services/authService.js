@@ -1,18 +1,42 @@
-const User = require('../config/db').user;
 const {resolveError} = require('../Utils/ErrorUtils/errorResolver');
-const jwt = require('jsonwebtoken');
+const tokenUtils = require('../Utils/Token/tokenUtils');
+const userRepository = require('../Repositories/userRepository');
 
-exports.getAccessToken = function(user) {
-    let accessToken = jwt.sign({email: user.email}, process.env.TOKEN_KEY, {expiresIn: '10m'});
-    return accessToken;
-}
-
-exports.getRefreshToken = function(user) {
-    let refreshToken = jwt.sign({email: user.email}, process.env.TOKEN_KEY, {expiresIn: "1h"});
-    return refreshToken;
-}
-
-exports.verifyToken = function(token) {
-    const decoded = jwt.verify(token, process.env.TOKEN_KEY);
-    return decoded;
+exports.refreshTokens = (resp, refreshToken) => {
+    const data = tokenUtils.verifyToken(refreshToken);
+    if (data) {
+        const {email} = data;
+        userRepository.findByEmail(email).then(
+            user => {
+                if (!user || user.refreshToken !== refreshToken) {
+                    resp.status(200).json({error: "Invalid email or token"});
+                }
+                const updateTokens = {
+                    accessToken: tokenUtils.getRefreshToken(user),
+                    refreshToken: tokenUtils.getAccessToken(user)
+                }
+                userRepository.updateUserById(user.id, updateTokens)
+                    .then(updatedRows => {
+                            if (!updatedRows[0]) {
+                                resp.status(200).json({error: "Failed "});
+                            }
+                            resp.status(201).json({
+                                success: "OK",
+                                accessToken: updateTokens.accessToken,
+                                refreshToken: updateTokens.refreshToken
+                            })
+                                .catch(err => {
+                                    resp.status(200).json(err);
+                                });
+                            resp.status(201).json(updateTokens);
+                        }
+                    ).catch(
+                    err => {
+                        resp.status(200).json({error: err});
+                    }
+                )
+            })
+    } else {
+        resp.status(200).json({error: "Invalid refresh token"});
+    }
 }

@@ -1,7 +1,8 @@
 const User = require('../../config/db').user;
 const {resolveError} = require('../../Utils/ErrorUtils/errorResolver');
-const authService = require('../../Services/authService');
+const tokenUtils = require('../../Utils/Token/tokenUtils');
 const userRepository = require('../../Repositories/userRepository');
+const authService = require('../../Services/authService');
 
 exports.register = function (req, res) {
     const {email, password} = req.body;
@@ -15,6 +16,11 @@ exports.register = function (req, res) {
         });
 }
 
+exports.refreshTokens = function(req,res){
+    const {refreshToken} = req.body;
+    authService.refreshTokens(res,refreshToken);
+}
+
 exports.login = function (req, res) {
     const {email, password} = req.body;
     
@@ -25,8 +31,8 @@ exports.login = function (req, res) {
                 res.status(200).json({error: "User not found"});
             }
 
-            const accessToken = authService.getAccessToken(user);
-            const refreshToken = authService.getRefreshToken(user);
+            const accessToken = tokenUtils.getAccessToken(user);
+            const refreshToken = tokenUtils.getRefreshToken(user);
 
             updateData = {
                 accessToken: accessToken,
