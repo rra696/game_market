@@ -16,14 +16,21 @@ exports.register = function (req, res) {
         });
 }
 
-exports.refreshTokens = function(req,res){
+exports.refreshTokens = function (req, res) {
     const {refreshToken} = req.body;
-    authService.refreshTokens(res,refreshToken);
+    authService.refreshTokens(refreshToken)
+        .then(result => {
+            res.status(201).json(result);
+        })
+        .catch(error => {
+            console.log(error);
+            res.status(200).json(error)
+        })
 }
 
 exports.login = function (req, res) {
     const {email, password} = req.body;
-    
+
     userRepository.findByEmailAndPassword(email, password)
         .then(user => {
 
@@ -40,23 +47,17 @@ exports.login = function (req, res) {
             }
 
             userRepository.updateUserById(user.id, updateData)
-            .then(updatedRows => {
+                .then(updatedRows => {
+                    res.status(201).json({success: "OK", accessToken: accessToken, refreshToken: refreshToken});
+                })
+                .catch(err => {
+                    res.json(err);
+                });
 
-                if (!updatedRows[0]) {
-                    res.status(200).json({error: "Failed login"});
-                }
-                
-                res.status(201).json({success: "OK", accessToken: accessToken, refreshToken: refreshToken});
-            })
-            .catch(err => {
-                res.json(err);
-            });
-            
-           
         })
         .catch(err => {
             res.status(200).json({error: err});
         })
 
-    
+
 }
