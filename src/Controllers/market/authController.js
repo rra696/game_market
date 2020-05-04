@@ -6,6 +6,7 @@ const authService = require('../../Services/authService');
 
 exports.register = function (req, res) {
     const {email, password} = req.body;
+
     User.create({email: email, password: password})
         .then(user => {
             res.status(201).json({success: "Registration user is success"});
@@ -18,12 +19,12 @@ exports.register = function (req, res) {
 
 exports.refreshTokens = function (req, res) {
     const {refreshToken} = req.body;
+    
     authService.refreshTokens(refreshToken)
         .then(result => {
             res.status(201).json(result);
         })
         .catch(error => {
-            console.log(error);
             res.status(200).json(error)
         })
 }
@@ -31,33 +32,12 @@ exports.refreshTokens = function (req, res) {
 exports.login = function (req, res) {
     const {email, password} = req.body;
 
-    userRepository.findByEmailAndPassword(email, password)
-        .then(user => {
-
-            if (!user) {
-                res.status(200).json({error: "User not found"});
-            }
-
-            const accessToken = tokenUtils.getAccessToken(user);
-            const refreshToken = tokenUtils.getRefreshToken(user);
-
-            updateData = {
-                accessToken: accessToken,
-                refreshToken: refreshToken
-            }
-
-            userRepository.updateUserById(user.id, updateData)
-                .then(updatedRows => {
-                    res.status(201).json({success: "OK", accessToken: accessToken, refreshToken: refreshToken});
-                })
-                .catch(err => {
-                    res.json(err);
-                });
-
-        })
-        .catch(err => {
-            res.status(200).json({error: err});
-        })
-
-
+    authService.login(email, password)
+    .then(tokens => {
+        res.status(201).json({success: "OK", accessToken: tokens.accessToken, refreshToken: tokens.refreshToken});
+    })
+    .catch(error => {
+        res.status(200).json(error);
+    })
+    
 }

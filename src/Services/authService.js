@@ -4,6 +4,7 @@ const userRepository = require('../Repositories/userRepository');
 exports.refreshTokens = (refreshToken) => {
     return new Promise((resolve, reject) => {
         const data = tokenUtils.verifyToken(refreshToken);
+
         if (data) {
             const {email} = data;
             userRepository.findByEmail(email)
@@ -15,10 +16,7 @@ exports.refreshTokens = (refreshToken) => {
                         accessToken: tokenUtils.getRefreshToken(user),
                         refreshToken: tokenUtils.getAccessToken(user)
                     }
-                    return {updateTokens: updateTokens, userId: user.id};
-                })
-                .then(result => {
-                    return userRepository.updateUserById(result.userId, result.updateTokens)
+                    return userRepository.updateUserById(result.userId, result.updateTokens);
                 })
                 .then(data => {
                     resolve({
@@ -27,10 +25,39 @@ exports.refreshTokens = (refreshToken) => {
                         refreshToken: data.refreshToken
                     });
                 })
-                .catch(
-                    err => {
-                        reject({error: err});
-                    })
+                .catch(err => {
+                    reject({error: err});
+                })
         }
     })
+}
+
+exports.login = (email, password) => {
+    return new Promise((resolve, reject) => {
+
+        userRepository.findByEmailAndPassword(email, password)
+        .then(user => {
+
+            if (!user) {
+                throw new Error("User not found");
+            }
+
+            const accessToken = tokenUtils.getAccessToken(user);
+            const refreshToken = tokenUtils.getRefreshToken(user);
+
+            updateData = {
+                accessToken: accessToken,
+                refreshToken: refreshToken
+            }
+
+            return userRepository.updateUserById(user.id, updateData);
+        })
+        .then(tokens => {
+            resolve(tokens);
+        })
+        .catch(err => {
+            reject({error: err.message});
+        })
+
+    });
 }
